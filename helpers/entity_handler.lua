@@ -142,4 +142,11 @@ function entityHandler.getAll()
     return entities
 end
 
+-- Kills all entities
+function entityHandler.clear()
+    for i = #entities, 1, -1 do
+        entities[i] = nil
+    end
+end
+
 return entityHandler
