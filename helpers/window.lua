@@ -1,8 +1,11 @@
+require("constants")
+local S = SCREEN
+
 local window   = {}
 
 -- Virtual resolution
-window.width   = 1280
-window.height  = 720
+window.width   = S.WIDTH
+window.height  = S.HEIGHT
 
 -- Runtime values
 window.scale   = 1
@@ -40,7 +43,7 @@ end
 -- Drawing
 function window.beginDraw()
     love.graphics.setCanvas(window.canvas)
-    love.graphics.clear(28 / 255, 3 / 255, 51 / 255, 1)
+    love.graphics.clear(unpack(S.COLOR))
 end
 
 function window.endDraw()

@@ -1,15 +1,18 @@
+require("constants")
+local P = PLAYER
+
 local BaseEntity    = require("entities.entity")
 local entityHandler = require("helpers.entity_handler")
 local keyboard      = require("helpers.keyboard")
 
-local Player        = BaseEntity:extend()
+local Player = BaseEntity:extend()
 
 function Player:new(x, y)
     BaseEntity.new(self, "Player", x, y)
 
     -- Size (no sprite yet)
-    self.width         = 16
-    self.height        = 16 -- Mario-sized!
+    self.width         = P.WIDTH
+    self.height        = P.HEIGHT -- Mario-sized!
 
     -- Physics state
     self.vx            = 0
@@ -17,21 +20,21 @@ function Player:new(x, y)
     self.onGround      = false
 
     -- Movement
-    self.walkSpeed     = 180
-    self.runSpeed      = 300
-    self.accelGround   = 3000
-    self.accelAir      = 1400
-    self.friction      = 2400
+    self.walkSpeed     = P.WALK_SPEED
+    self.runSpeed      = P.RUN_SPEED
+    self.accelGround   = P.ACCEL_GROUND
+    self.accelAir      = P.ACCEL_AIR
+    self.friction      = P.FRICTION
 
     -- Gravity / Jump
-    self.gravity       = 2600
-    self.jumpVel       = 760
-    self.fallMult      = 1.35 -- Faster fall than rise
-    self.lowJumpMult   = 1.8  -- Short hop when you release jump early
+    self.gravity       = P.GRAVITY
+    self.jumpVel       = P.JUMP_VEL
+    self.fallMult      = P.FALL_MULT     -- Faster fall than rise
+    self.lowJumpMult   = P.LOW_JUMP_MULT -- Short hop when you release jump early
 
     -- Polish
-    self.coyoteTimeMax = 0.10
-    self.jumpBufferMax = 0.10
+    self.coyoteTimeMax = P.COYOTE_TIME
+    self.jumpBufferMax = P.JUMP_BUFFER
     self.coyoteTime    = 0
     self.jumpBuffer    = 0
 end

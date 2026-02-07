@@ -1,5 +1,6 @@
 local Rectangle = require("entities.rectangle")
 local Sheep     = require("entities.sheep")
+require("constants")
 
 local editor = {}
 
@@ -47,7 +48,7 @@ function editor.new(entityHandler, keyboard, window)
     function self:update(dt)
         -- Editor movement (substepped by Game)
         local dx, dy = 0, 0
-        local speed = 200
+        local speed = EDITOR_MOVE_SPEED
 
         if keyboard.pressed("up")    then dy = dy - speed * dt end
         if keyboard.pressed("down")  then dy = dy + speed * dt end
