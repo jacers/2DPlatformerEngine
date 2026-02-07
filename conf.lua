@@ -1,4 +1,4 @@
-require("constants")
+require("helpers.constants")
 local S = SCREEN
 
 function love.conf(t)

@@ -1,6 +1,6 @@
 local Rectangle = require("entities.rectangle")
 local Sheep     = require("entities.sheep")
-require("constants")
+require("helpers.constants")
 
 local editor = {}
 

@@ -1,4 +1,4 @@
-require("constants")
+require("helpers.constants")
 local P = PLAYER
 
 local BaseEntity    = require("entities.entity")
