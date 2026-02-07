@@ -1,16 +1,23 @@
+local keyboard = {}
+
 local input = {
     up              = { "w", "up" },
     down            = { "s", "down" },
     left            = { "a", "left" },
     right           = { "d", "right" },
-    spawn_rectangle = {"space", "q", "j"},
-    spawn_sheep     = {"lshift", "e", "k"},
-    spawn_dick      = {"tab", "r", "l"}
+    jump            = { "space", "l" },
+
+    spawn_rectangle = { "q", "j" },
+    spawn_sheep     = { "e", "k" },
 }
 
-function pressed(action)
-    for _, key in ipairs(input[action]) do
-        if love.keyboard.isDown(key) then return true end
+function keyboard.pressed(action)
+    for _, key in ipairs(input[action] or {}) do
+        if love.keyboard.isDown(key) then
+            return true
+        end
     end
     return false
 end
+
+return keyboard

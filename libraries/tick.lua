@@ -28,14 +28,13 @@ function event.new(parent, fn, delay, recur, err)
   err = err or 0
   -- Create and return event
   return setmetatable({
-    parent  = parent,
-    delay   = delay,
-    timer   = delay + err,
-    fn      = fn,
-    recur   = recur,
+    parent = parent,
+    delay  = delay,
+    timer  = delay + err,
+    fn     = fn,
+    recur  = recur,
   }, event)
 end
-
 
 function event:after(fn, delay)
   -- Error check
@@ -53,24 +52,19 @@ function event:after(fn, delay)
   return e
 end
 
-
 function event:stop()
   tick.remove(self.parent, self)
 end
 
-
-
 function tick.group()
   return setmetatable({ err = 0 }, tick)
 end
-
 
 function tick:add(e)
   self[e] = true
   table.insert(self, e)
   return e
 end
-
 
 function tick:remove(e)
   if type(e) == "number" then
@@ -90,7 +84,6 @@ function tick:remove(e)
   end
 end
 
-
 function tick:update(dt)
   for i = #self, 1, -1 do
     local e = self[i]
@@ -99,7 +92,7 @@ function tick:update(dt)
       if e.recur then
         e.timer = e.timer + e.delay
       else
-        self:remove(i) 
+        self:remove(i)
       end
       self.err = e.timer
       e.fn()
@@ -110,7 +103,6 @@ function tick:update(dt)
   end
   self.err = 0
 end
-
 
 function tick:event(fn, delay, recur)
   delay = tonumber(delay)
@@ -142,24 +134,21 @@ function tick:event(fn, delay, recur)
   return self:add(event.new(self, fn, delay, recur, self.err))
 end
 
-
 function tick:delay(fn, delay)
   return self:event(fn, delay, false)
 end
-
 
 function tick:recur(fn, delay)
   return self:event(fn, delay, true)
 end
 
-
 local group = tick.group()
 
 local bound = {
-  update  = function(...) return tick.update(group, ...) end,
-  delay   = function(...) return tick.delay (group, ...) end,
-  recur   = function(...) return tick.recur (group, ...) end,
-  remove  = function(...) return tick.remove(group, ...) end,
+  update = function(...) return tick.update(group, ...) end,
+  delay  = function(...) return tick.delay(group, ...) end,
+  recur  = function(...) return tick.recur(group, ...) end,
+  remove = function(...) return tick.remove(group, ...) end,
 }
 setmetatable(bound, tick)
 
