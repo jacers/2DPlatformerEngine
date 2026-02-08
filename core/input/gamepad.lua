@@ -11,6 +11,8 @@ local input = {
     jump  = { "a", "b" },
     run   = { "x", "y" },
 
+    -- Pause (+/- on Switch controller)
+    pause = {"start", "back"},
 
     -- Analog stick movement (optional thresholds)
     stick = {

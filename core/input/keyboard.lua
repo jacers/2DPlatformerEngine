@@ -16,6 +16,9 @@ local input = {
     -- Editor
     spawn_rectangle = { "q", "h" },
     spawn_sheep     = { "e", "j" },
+
+    -- Pause
+    pause           = { "p", "escape" },
 }
 
 -- Returns true while any key for the action is held
@@ -49,8 +52,14 @@ function keyboard.actionDown(action)
     return keyboard.pressed(action) or gamepad.down(action)
 end
 
+-- Edge-triggered
+function keyboard.actionPressed(key, action)
+    local kb = keyboard.keypressed(key, action)
+    local gp = gamepad.pressed(action) -- consumes stored gamepad press
+    return kb or gp
+end
+
 -- Edge-triggered (jump buffer, toggles, menus)
--- Call from BOTH love.keypressed and love.gamepadpressed (via game routing)
 function keyboard.actionPressedAny(key, action)
     local kb = false
     if key ~= nil then
