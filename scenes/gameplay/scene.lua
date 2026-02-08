@@ -13,6 +13,8 @@ local levelManager  = require("scenes.gameplay.level_manager")
 
 local pause         = require("scenes.pause.scene")
 
+local altimeter     = require("systems.altimeter")
+
 local scene         = {}
 
 local function snapCameraToEntity(ent)
@@ -37,6 +39,7 @@ function scene.load()
 
     local ctx = levelManager.load(1)
     scene.player = ctx.player
+    altimeter.reset(scene.player)
 
     -- Bounds MUST come from the level, otherwise you'll clamp to the top-left screen
     if ctx.bounds then
@@ -67,6 +70,7 @@ function scene.update(dt)
         tick.update(sdt)
         entityHandler.update(sdt)
         levelManager.update(sdt)
+        altimeter.update(sdt, scene.player)
 
         camera.update(sdt)
     end
@@ -79,6 +83,7 @@ function scene.draw()
     camera.apply()
     entityHandler.draw()
     camera.clear()
+    altimeter.draw(12)
 
     pause.drawOverlay()
     window.endDraw()

@@ -24,7 +24,7 @@ function pause.drawOverlay()
     local text = "PAUSED"
     local font = love.graphics.getFont()
     local tw = font:getWidth(text)
-    local th = font:getHeight()
+    local th = font:getHeight(text)
     love.graphics.print(text, (SCREEN.WIDTH - tw) / 2, (SCREEN.HEIGHT - th) / 2)
 
     love.graphics.setColor(1, 1, 1, 1)

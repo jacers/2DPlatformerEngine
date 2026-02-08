@@ -4,6 +4,8 @@ function love.load()
     scene.load()
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
     love.graphics.setLineStyle("rough")
+    local font = love.graphics.newFont("assets/fonts/public-pixel-font/PublicPixel-rv0pA.ttf")
+    love.graphics.setFont(font)
 end
 
 function love.update(dt)
