@@ -99,6 +99,16 @@ function scene.keypressed(key)
         scene.player:queueJump()
         return
     end
+
+    if scene.player and keyboard.actionPressedAny(key, "cycle_left") then
+        scene.player:cycleSkin(-1)
+        return
+    end
+
+    if scene.player and keyboard.actionPressedAny(key, "cycle_right") then
+        scene.player:cycleSkin(1)
+        return
+    end
 end
 
 function scene.gamepadpressed(joystick, button)
@@ -111,6 +121,16 @@ function scene.gamepadpressed(joystick, button)
 
     if scene.player and keyboard.actionPressedAny(nil, "jump") then
         scene.player:queueJump()
+        return
+    end
+
+    if scene.player and keyboard.actionPressedAny(nil, "cycle_left") then
+        scene.player:cycleSkin(-1)
+        return
+    end
+
+    if scene.player and keyboard.actionPressedAny(nil, "cycle_right") then
+        scene.player:cycleSkin(1)
         return
     end
 end

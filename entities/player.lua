@@ -1,5 +1,6 @@
 require("core.constants")
 local P             = PLAYER
+local PlayerSkins   = require("systems.player_skins")
 
 local BaseEntity    = require("entities.entity")
 local entityHandler = require("systems.entity_handler")
@@ -16,7 +17,7 @@ function Player:new(x, y)
     self.width         = P.WIDTH
     self.height        = P.HEIGHT
 
-    -- Default hitbox sizee
+    -- Default hitbox size
     self.baseHitW      = P.WIDTH
     self.baseHitH      = P.HEIGHT
 
@@ -35,8 +36,8 @@ function Player:new(x, y)
     -- Gravity / Jump
     self.gravity       = P.GRAVITY
     self.jumpVel       = P.JUMP_VEL
-    self.fallMult      = P.FALL_MULT     -- Faster fall than rise
-    self.lowJumpMult   = P.LOW_JUMP_MULT -- Short hop when you release jump early
+    self.fallMult      = P.FALL_MULT
+    self.lowJumpMult   = P.LOW_JUMP_MULT
 
     -- Polish
     self.coyoteTimeMax = P.COYOTE_TIME
@@ -44,30 +45,64 @@ function Player:new(x, y)
     self.coyoteTime    = 0
     self.jumpBuffer    = 0
 
-    -- Facing (stable; avoids flip jitter/teleport)
+    -- Facing
     self.facing        = 1 -- 1 = right, -1 = left
 
-    -- Animation
-    self.anim          = Animation.new("assets/images/player/pinktail.png", {
-        frameW = 23,
-        frameH = 23,
-        border = 1,
-        spacing = 1,
-        count = 12,
-        trimTop = 6,
+    -- Skin (build animation ONCE)
+    local skin   = PlayerSkins.current()
+    self.skinId  = skin.id
+    self.skinPath = skin.path
+
+    self.anim = self:_buildAnim(self.skinPath)
+    self.anim:play("stand", true)
+end
+
+-- Build an Animation from a spritesheet path
+function Player:_buildAnim(imagePath)
+    local anim = Animation.new(imagePath, {
+        frameW   = 23,
+        frameH   = 23,
+        border   = 1,
+        spacing  = 1,
+        count    = 12,
+        trimTop  = 6,
     })
 
-    self.anim:addClip("stand", { 1 }, 1, false)
-    self.anim:addClip("crouch", { 2 }, 1, false)
-    self.anim:addClip("walk", { 3, 4, 5 }, 10, true)
-    self.anim:addClip("run", { 6, 7, 8 }, 14, true)
-    self.anim:addClip("turn", { 9 }, 1, false)
-    self.anim:addClip("jump_up", { 10 }, 1, false)
-    self.anim:addClip("jump_down", { 11 }, 1, false)
-    self.anim:addClip("look_up", { 12 }, 1, false)
+    anim:addClip("stand",     { 1 },       1,  false)
+    anim:addClip("crouch",    { 2 },       1,  false)
+    anim:addClip("walk",      { 3, 4, 5 }, 10, true)
+    anim:addClip("run",       { 6, 7, 8 }, 14, true)
+    anim:addClip("turn",      { 9 },       1,  false)
+    anim:addClip("jump_up",   { 10 },      1,  false)
+    anim:addClip("jump_down", { 11 },      1,  false)
+    anim:addClip("look_up",   { 12 },      1,  false)
 
-    -- Start in a known state
-    self.anim:play("stand", true)
+    return anim
+end
+
+function Player:setSkinByIndex(i)
+    local prevFlip = self.anim and self.anim.flipX or false
+    local prevClip = self.anim and self.anim.currentClip or "stand"
+
+    local skin = PlayerSkins.setIndex(i)
+    self.skinId = skin.id
+    self.skinPath = skin.path
+
+    self.anim = self:_buildAnim(self.skinPath)
+    self.anim.flipX = prevFlip
+
+    -- Default to standing if previous animation clip could not be found
+    if prevClip and self.anim.play then
+        self.anim:play(prevClip, true)
+    else
+        self.anim:play("stand", true)
+    end
+end
+
+function Player:cycleSkin(dir)
+    local skin = PlayerSkins.cycle(dir or 1)
+    self:setSkinByIndex(PlayerSkins.index)
+    return skin
 end
 
 -- Returns the collision hitbox AABB:

@@ -2,20 +2,23 @@ local gamepad = {}
 
 local input = {
     -- General movement
-    up    = { "dpup" },
-    down  = { "dpdown" },
-    left  = { "dpleft" },
-    right = { "dpright" },
+    up          = { "dpup" },
+    down        = { "dpdown" },
+    left        = { "dpleft" },
+    right       = { "dpright" },
 
     -- Player movement
-    jump  = { "a", "b" },
-    run   = { "x", "y" },
+    jump        = { "a", "b" },
+    run         = { "x", "y" },
 
     -- Pause (+/- on Switch controller)
-    pause = {"start", "back"},
+    pause       = { "start", "back" },
+
+    cycle_left  = { "leftshoulder" },
+    cycle_right = { "rightshoulder" },
 
     -- Analog stick movement (optional thresholds)
-    stick = {
+    stick       = {
         enabled   = true,
         deadzone  = 0.25,
         leftAxis  = "leftx",

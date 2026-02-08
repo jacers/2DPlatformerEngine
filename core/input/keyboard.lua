@@ -4,17 +4,21 @@ local keyboard = {}
 
 local input = {
     -- General movement
-    up              = { "w", "up" },
-    down            = { "s", "down" },
-    left            = { "a", "left" },
-    right           = { "d", "right" },
+    up          = { "w", "up" },
+    down        = { "s", "down" },
+    left        = { "a", "left" },
+    right       = { "d", "right" },
 
     -- Player movement
-    jump            = { "space", "l" },
-    run             = { "lshift", "rshift", "k" },
+    jump        = { "space", "l" },
+    run         = { "lshift", "rshift", "k" },
 
     -- Pause
-    pause           = { "p", "escape" },
+    pause       = { "p", "escape" },
+
+    -- Cycle character
+    cycle_left  = { "-" },
+    cycle_right = { "=" },
 }
 
 -- Returns true while any key for the action is held
