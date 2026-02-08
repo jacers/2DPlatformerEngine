@@ -26,10 +26,29 @@ camera.air             = {
     enabled = true,
     -- 0 = freeze Y completely while airborne
     -- 1 = follow Y perfectly
-    followY = 0.25,
+    followY = 0.65,
 }
 
 camera.lastGroundBaseY = nil
+
+-- Vertical deadzone (camera Y only moves when player leaves a middle band)
+camera.vertical        = {
+    enabled      = true,
+
+    -- Deadzone height as a fraction of viewport height (world units).
+    -- Bigger = steadier camera, smaller = more responsive.
+    deadzoneFrac = 0.18,
+
+    -- Positive bias shifts the deadzone band downward so you see more above the player.
+    -- 0.08 is a common platformer choice.
+    biasFrac     = 0.08,
+
+    -- Cap vertical correction speed (world units per second) to prevent drastic jumps.
+    maxStep      = 2000,
+
+    -- Separate smoothing just for Y corrections (lower = looser, higher = snappier).
+    smoothing    = 24,
+}
 
 -- Bounds and viewport
 camera.bounds          = nil -- { x, y, w, h }
@@ -129,13 +148,56 @@ function camera.update(dt)
     local vw = camera.viewW / camera.scale
     local vh = camera.viewH / camera.scale
 
-    -- Base camera position (center target)
-    local baseX =
-        (camera.target.x + (camera.target.width or 0) / 2) - vw / 2
-    local baseY =
-        (camera.target.y + (camera.target.height or 0) / 2) - vh / 2
+    -- Target center
+    local px = (camera.target.x + (camera.target.width or 0) / 2)
+    local py = (camera.target.y + (camera.target.height or 0) / 2)
+
+    -- Base camera X (center target)
+    local baseX = px - vw / 2
+
+    -- Base camera Y:
+    -- Start with "center target" but optionally apply vertical deadzone first.
+    local baseY = py - vh / 2
+
+    if camera.vertical.enabled then
+        local deadFrac    = camera.vertical.deadzoneFrac or 0.30
+        local biasFrac    = camera.vertical.biasFrac or 0.0
+        local maxStep     = camera.vertical.maxStep or 200
+        local ySmooth     = camera.vertical.smoothing or camera.smoothing
+
+        local deadH       = vh * deadFrac
+        local bandTop     = (vh - deadH) / 2 + (vh * biasFrac)
+        local bandBottom  = bandTop + deadH
+
+        -- Player's screen-space Y within current camera view
+        local relY        = py - camera.y
+
+        -- Desired camera.y (top-left) based on leaving the band
+        local desiredCamY = camera.y
+        if relY < bandTop then
+            desiredCamY = py - bandTop
+        elseif relY > bandBottom then
+            desiredCamY = py - bandBottom
+        end
+
+        -- Clamp correction speed so it isn't drastic
+        local dy = desiredCamY - camera.y
+        local maxMove = maxStep * dt
+        if dy > maxMove then dy = maxMove end
+        if dy < -maxMove then dy = -maxMove end
+
+        -- Smoothly apply the correction and convert back to baseY
+        local yt = 1 - math.exp(-ySmooth * dt)
+        local camYAfter = camera.y + dy * yt
+
+        baseY = camYAfter
+    else
+        -- If vertical deadzone disabled, stick to centered baseY (camera top-left)
+        baseY = py - vh / 2
+    end
 
     -- Airborne vertical dampening (prevents camera matching jump perfectly)
+    -- This runs AFTER vertical deadzone so jumps are both steadier and less "locked on".
     if camera.air.enabled then
         local onGround = camera.target.onGround == true
         if onGround then
@@ -221,6 +283,7 @@ function camera.reset(x, y)
     camera.zoom.target = CAMERA.DEFAULT_ZOOM
     camera.look.x = 0
     camera.look.y = 0
+    camera.lastGroundBaseY = nil
 end
 
 -- Utilities

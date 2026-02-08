@@ -36,7 +36,7 @@ CAMERA            = {
     MIN_ZOOM         = 0.75,
     MAX_ZOOM         = 6.0,
 
-    FOLLOW_SMOOTHING = 12,
+    FOLLOW_SMOOTHING = 30,
 
     LOOK             = {
         MAX_X = 96,
@@ -48,10 +48,17 @@ CAMERA            = {
     ZOOM             = {
         AMOUNT = 0.35,
         SMOOTHING = 14,
+    },
+
+    VERTICAL         = {
+        DEADZONE_FRAC = 0.3, -- size of deadzone as fraction of viewport height (0.25 = 25%)
+        BIAS_FRAC     = 0.05, -- shifts deadzone slightly downward so you see more above (optional)
+        MAX_STEP      = 220,  -- max pixels/sec camera can correct vertically (prevents drastic jumps)
+        SMOOTHING     = 8,    -- vertical follow smoothing (lower = looser)
     }
 }
 
-DEBUG = {
+DEBUG             = {
     -- Draw player's hitbox in red on top for clarity
     DRAW_PLAYER_HITBOX = false,
     HITBOX_FILL_ALPHA  = 0.15, -- How easy it is to see
