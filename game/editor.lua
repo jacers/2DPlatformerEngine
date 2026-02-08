@@ -6,9 +6,9 @@ require("helpers.constants")
 local editor = {}
 
 function editor.new(entityHandler, keyboard, window)
-    local self        = {}
+    local self = {}
 
-    self.spawnTools   = {
+    self.spawnTools = {
         spawn_rectangle = {
             label = "Rectangle",
             factory = function(x, y) return Rectangle(x, y, 160, 32) end
@@ -24,7 +24,7 @@ function editor.new(entityHandler, keyboard, window)
     self.spawnLabel   = ""
     self.activeEntity = nil
 
-    self.player       = nil -- set by game
+    self.player = nil
 
     function self:setPlayer(p)
         self.player = p
@@ -47,14 +47,13 @@ function editor.new(entityHandler, keyboard, window)
     end
 
     function self:update(dt)
-        -- Editor movement (substepped by Game)
         local dx, dy = 0, 0
         local speed = EDITOR_MOVE_SPEED
 
-        if keyboard.pressed("up") then dy = dy - speed * dt end
-        if keyboard.pressed("down") then dy = dy + speed * dt end
-        if keyboard.pressed("left") then dx = dx - speed * dt end
-        if keyboard.pressed("right") then dx = dx + speed * dt end
+        if keyboard.actionDown("up")    then dy = dy - speed * dt end
+        if keyboard.actionDown("down")  then dy = dy + speed * dt end
+        if keyboard.actionDown("left")  then dx = dx - speed * dt end
+        if keyboard.actionDown("right") then dx = dx + speed * dt end
 
         if dx ~= 0 or dy ~= 0 then
             if self.spawnMode then
@@ -65,13 +64,16 @@ function editor.new(entityHandler, keyboard, window)
         end
     end
 
+    local function screenToWorldWithCamera(sx, sy)
+        local vx, vy = window.screenToWorld(sx, sy)
+        local cx, cy = camera.getDrawOffset()
+        return vx + cx, vy + cy
+    end
+
     function self:draw()
-        -- Spawn preview
         if self.spawnMode and self.spawnFactory then
             local mx, my = love.mouse.getPosition()
-            local vx, vy = window.screenToWorld(mx, my)
-            local cx, cy = camera.getDrawOffset()
-            vx, vy = vx + cx, vy + cy
+            local vx, vy = screenToWorldWithCamera(mx, my)
 
             local preview = self.spawnFactory(vx, vy)
             preview.x = vx - preview.width / 2
@@ -86,7 +88,6 @@ function editor.new(entityHandler, keyboard, window)
             love.graphics.setColor(1, 1, 1, 1)
         end
 
-        -- UI text (drawn on canvas by Game)
         if self.spawnMode then
             love.graphics.print(
                 "Spawn mode: " .. self.spawnLabel .. " (click to place, Esc to cancel)",
@@ -99,7 +100,7 @@ function editor.new(entityHandler, keyboard, window)
             )
         else
             love.graphics.print(
-                "Left click selects, right click deletes | Space = jump",
+                "Left click selects, right click deletes | Space/A = jump",
                 10, 10
             )
         end
@@ -111,7 +112,6 @@ function editor.new(entityHandler, keyboard, window)
             return true
         end
 
-        -- Toggle spawn tools
         for action, tool in pairs(self.spawnTools) do
             if keyboard.pressed(action) then
                 if self.spawnMode and self.spawnLabel == tool.label then
@@ -127,14 +127,12 @@ function editor.new(entityHandler, keyboard, window)
     end
 
     function self:mousepressed(x, y, button)
-        -- ignore clicks outside viewport (optional, but nice)
         if window.isInsideViewport and not window.isInsideViewport(x, y) then
             return false
         end
 
-        local vx, vy = window.screenToWorld(x, y)
-        local cx, cy = camera.getDrawOffset()
-        vx, vy = vx + cx, vy + cy
+        -- IMPORTANT: use x,y (NOT mx,my) and include camera offset
+        local vx, vy = screenToWorldWithCamera(x, y)
 
         if self.spawnMode and button == 1 and self.spawnFactory then
             local ent = self.spawnFactory(vx, vy)

@@ -3,7 +3,8 @@ local P = PLAYER
 
 local BaseEntity    = require("entities.entity")
 local entityHandler = require("helpers.entity_handler")
-local keyboard      = require("helpers.keyboard")
+local keyboard      = require("helpers.controls.keyboard")
+local gamepad       = require("helpers.controls.gamepad")
 
 local Player = BaseEntity:extend()
 
@@ -51,14 +52,21 @@ end
 function Player:update(dt)
     -- Input
     local move = 0
-    if keyboard.pressed("left") then move = move - 1 end
-    if keyboard.pressed("right") then move = move + 1 end
 
-    local runHeld     = keyboard.pressed("run")
-    local holdingJump = keyboard.pressed("jump")
+    -- Prefer analog stick if present
+    local axisX = gamepad.moveX()
+    if math.abs(axisX) > 0 then
+        move = axisX
+    else
+        if keyboard.pressed("left")  then move = move - 1 end
+        if keyboard.pressed("right") then move = move + 1 end
+    end
 
-    local targetMax   = runHeld and self.runSpeed or self.walkSpeed
-    local accel       = self.onGround and self.accelGround or self.accelAir
+    local runHeld     = keyboard.pressed("run")  or gamepad.down("run")
+    local holdingJump = keyboard.pressed("jump") or gamepad.down("jump")
+
+    local targetMax = runHeld and self.runSpeed or self.walkSpeed
+    local accel     = self.onGround and self.accelGround or self.accelAir
 
     -- Horizontal accel / friction (reduced air braking)
     if move ~= 0 then
