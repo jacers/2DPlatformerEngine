@@ -1,4 +1,3 @@
--- systems/entity_handler.lua
 local entityHandler = {}
 local entities = {}
 
@@ -19,6 +18,13 @@ function entityHandler.spawn(entity)
 end
 
 function entityHandler.update(dt)
+    -- Timers / one-way drop-through, etc.
+    physics.updateBodyTimersWorld(entities, dt)
+
+    -- Moving platforms should move BEFORE entities update so riders are carried smoothly
+    physics.updatePlatforms(entities, dt)
+
+    -- Entity updates (player calls movePlatformer here)
     for i = #entities, 1, -1 do
         local entity = entities[i]
         entity:update(dt)
@@ -27,6 +33,9 @@ function entityHandler.update(dt)
             table.remove(entities, i)
         end
     end
+
+    -- Triggers are evaluated AFTER movement for this frame
+    physics.updateTriggers(entities)
 end
 
 function entityHandler.draw()
