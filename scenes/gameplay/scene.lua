@@ -10,7 +10,6 @@ local window        = require("core.window")
 local camera        = require("core.camera")
 
 local levelManager  = require("scenes.gameplay.level_manager")
-local editorFactory = require("scenes.gameplay.editor")
 
 local pause         = require("scenes.pause.scene")
 
@@ -52,9 +51,6 @@ function scene.load()
         camera.setTarget(scene.player)
         snapCameraToEntity(scene.player) -- <- KEY: see the level immediately
     end
-
-    scene.editor = editorFactory.new(entityHandler, keyboard, window)
-    scene.editor:setPlayer(scene.player)
 end
 
 function scene.update(dt)
@@ -72,7 +68,6 @@ function scene.update(dt)
         entityHandler.update(sdt)
         levelManager.update(sdt)
 
-        scene.editor:update(sdt)
         camera.update(sdt)
     end
 end
@@ -85,9 +80,6 @@ function scene.draw()
     entityHandler.draw()
     camera.clear()
 
-    -- UI / editor overlay (screen space)
-    scene.editor:draw()
-
     pause.drawOverlay()
     window.endDraw()
 end
@@ -98,11 +90,7 @@ function scene.keypressed(key)
         return true
     end
 
-    if scene.editor:keypressed(key) then
-        return
-    end
-
-    if scene.player and not scene.editor:isSpawnMode() and keyboard.actionPressedAny(key, "jump") then
+    if scene.player and keyboard.actionPressedAny(key, "jump") then
         scene.player:queueJump()
         return
     end
@@ -116,14 +104,10 @@ function scene.gamepadpressed(joystick, button)
         return true
     end
 
-    if scene.player and not scene.editor:isSpawnMode() and keyboard.actionPressedAny(nil, "jump") then
+    if scene.player and keyboard.actionPressedAny(nil, "jump") then
         scene.player:queueJump()
         return
     end
-end
-
-function scene.mousepressed(x, y, button)
-    scene.editor:mousepressed(x, y, button)
 end
 
 function scene.resize(w, h)

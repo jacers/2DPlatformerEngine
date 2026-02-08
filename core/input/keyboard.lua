@@ -13,10 +13,6 @@ local input = {
     jump            = { "space", "l" },
     run             = { "lshift", "rshift", "k" },
 
-    -- Editor
-    spawn_rectangle = { "q", "h" },
-    spawn_sheep     = { "e", "j" },
-
     -- Pause
     pause           = { "p", "escape" },
 }

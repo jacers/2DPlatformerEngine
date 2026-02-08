@@ -134,9 +134,6 @@ function level_loader.loadTiledJson(entityHandler, path)
         print("WARNING: No 'player_spawn' object found in Entities layer")
     end
 
-    print("Loaded Tiled map:", map.width, map.height, "tiles =>", worldW, worldH, "px")
-    print("Player spawn:", ctx.player_spawn and ctx.player_spawn.x, ctx.player_spawn and ctx.player_spawn.y)
-
     return ctx
 end
 

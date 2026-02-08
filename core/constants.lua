@@ -16,7 +16,7 @@ PLAYER            = {
     RUN_SPEED           = 180,
     ACCEL_GROUND        = 3000,
     ACCEL_AIR           = 1000,
-    FRICTION            = 2400,
+    FRICTION            = 1500,
     GRAVITY             = 3000,
     JUMP_VEL            = 760,
     FALL_MULT           = 1.35,
@@ -33,7 +33,7 @@ PLAYER            = {
 
 DEBUG             = {
     -- Draw player's hitbox in red on top for clarity
-    DRAW_PLAYER_HITBOX = true,
+    DRAW_PLAYER_HITBOX = false,
     HITBOX_FILL_ALPHA  = 0.15, -- How easy it is to see
 }
 
