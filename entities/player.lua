@@ -40,13 +40,17 @@ function Player:new(x, y)
     self.coyoteTime    = 0
     self.jumpBuffer    = 0
 
+    -- Facing (stable; avoids flip jitter/teleport)
+    self.facing        = 1 -- 1 = right, -1 = left
+
     -- Animation
-    self.anim          = Animation.new("assets/images/REPLACE_ME.png", {
-        frameW = 24,
-        frameH = 24,
+    self.anim          = Animation.new("assets/images/scissortail.png", {
+        frameW = 23,
+        frameH = 23,
         border = 1,
         spacing = 1,
-        count = 23
+        count = 12,
+        trimTop = 6,
     })
 
     self.anim:addClip("stand", { 1 }, 1, false)
@@ -56,7 +60,7 @@ function Player:new(x, y)
     self.anim:addClip("turn", { 9 }, 1, false)
     self.anim:addClip("jump_up", { 10 }, 1, false)
     self.anim:addClip("jump_down", { 11 }, 1, false)
-    self.anim:addClip("look_up", { 22 }, 1, false)
+    self.anim:addClip("look_up", { 12 }, 1, false)
 
     -- Start in a known state
     self.anim:play("stand", true)
@@ -75,26 +79,38 @@ function Player:update(dt)
     -- Input
     local move           = 0
 
-    -- Vertical intent (only locks horizontal movement while grounded)
+    -- Vertical intent (Mario behavior)
     local upHeld         = keyboard.actionDown("up") or gamepad.down("up")
     local downHeld       = keyboard.actionDown("down") or gamepad.down("down")
-    local verticalIntent = upHeld or downHeld
-    local lockHorizontal = self.onGround and verticalIntent
+
+    -- Raw horizontal intent (used for facing, even if movement is locked)
+    local rawX           = 0
 
     -- Prefer analog stick if present
     local axisX          = gamepad.moveX()
-    if not lockHorizontal then
-        if math.abs(axisX) > 0 then
-            move = axisX
-        else
-            -- Keyboard fallback
-            if keyboard.pressed("left") then move = move - 1 end
-            if keyboard.pressed("right") then move = move + 1 end
+    if math.abs(axisX) > 0 then
+        rawX = axisX
+    else
+        -- Keyboard fallback
+        if keyboard.pressed("left") then rawX = rawX - 1 end
+        if keyboard.pressed("right") then rawX = rawX + 1 end
 
-            -- Gamepad D-pad fallback
-            if gamepad.down("left") then move = move - 1 end
-            if gamepad.down("right") then move = move + 1 end
-        end
+        -- Gamepad D-pad fallback
+        if gamepad.down("left") then rawX = rawX - 1 end
+        if gamepad.down("right") then rawX = rawX + 1 end
+    end
+
+    -- Movement locks:
+    --  - Holding UP locks movement AND facing (look up)
+    --  - Holding DOWN locks movement ONLY (crouch-turn is allowed)
+    local lockMove       = self.onGround and (upHeld or downHeld)
+    local lockFacing     = self.onGround and upHeld
+
+    -- Apply movement only if not locked
+    if not lockMove then
+        move = rawX
+    else
+        move = 0
     end
 
     local runHeld     = keyboard.pressed("run") or gamepad.down("run")
@@ -105,14 +121,14 @@ function Player:update(dt)
 
     -- Turnaround / skid check (compute early so we can affect physics)
     local turning = false
-    if self.onGround and runHeld and not lockHorizontal then
+    if self.onGround and runHeld and not lockMove then
         if (move < -0.2 and self.vx > 60) or (move > 0.2 and self.vx < -60) then
             turning = true
         end
     end
 
     -- Horizontal accel / friction
-    if move ~= 0 and not turning and not lockHorizontal then
+    if move ~= 0 and not turning and not lockMove then
         self.vx = self.vx + move * accel * dt
         self.vx = math.max(-targetMax, math.min(self.vx, targetMax))
     else
@@ -120,7 +136,7 @@ function Player:update(dt)
             local friction = self.friction
 
             -- Less = more slide when holding up/down
-            if lockHorizontal then
+            if lockMove then
                 friction = friction * 0.25
             end
 
@@ -166,12 +182,26 @@ function Player:update(dt)
 
     -- Animation selection (Mario-esque)
 
-    -- Facing
-    if self.vx < -1 then
-        self.anim.flipX = true
-    elseif self.vx > 1 then
-        self.anim.flipX = false
+    -- Facing (stable; avoids flip jitter/teleport)
+    if not lockFacing then
+        local intentDead = 0.35 -- helps prevent tiny stick noise pops
+
+        -- Prefer input intent for crouch-turn + immediate direction changes
+        if rawX < -intentDead then
+            self.facing = -1
+        elseif rawX > intentDead then
+            self.facing = 1
+        else
+            -- If no strong intent, fall back to velocity when actually moving
+            if self.vx < -20 then
+                self.facing = -1
+            elseif self.vx > 20 then
+                self.facing = 1
+            end
+        end
     end
+
+    self.anim.flipX = (self.facing == -1)
 
     -- State priority
     if not self.onGround then
@@ -208,8 +238,15 @@ end
 
 function Player:draw()
     local ox = self.anim.frameW / 2
-    local oy = self.anim.frameH / 2
-    self.anim:draw(self.x + self.width / 2, self.y + self.height / 2, 0, 1, 1, ox, oy)
+    local oy = self.anim.frameH - 1 -- bottom of sprite frame
+
+    -- Draw at bottom-center of hitbox
+    self.anim:draw(
+        self.x + self.width / 2,
+        self.y + self.height,
+        0, 1, 1,
+        ox, oy
+    )
 end
 
 return Player

@@ -1,14 +1,20 @@
--- helpers/animation.lua
 local Animation = {}
 Animation.__index = Animation
 
 -- Utility: build quads from a sprite sheet laid out in a single row
-local function buildQuads(img, frameW, frameH, border, spacing, count)
+local function buildQuads(img, frameW, frameH, border, spacing, count, trimTop)
+    trimTop = trimTop or 0
+
     local quads = {}
     for i = 1, count do
         local x = border + (i - 1) * (frameW + spacing)
-        local y = border
-        quads[i] = love.graphics.newQuad(x, y, frameW, frameH, img:getWidth(), img:getHeight())
+        local y = border + trimTop
+
+        quads[i] = love.graphics.newQuad(
+            x, y,
+            frameW, frameH,
+            img:getWidth(), img:getHeight()
+        )
     end
     return quads
 end
@@ -27,17 +33,23 @@ function Animation.new(imagePath, opts)
     self.spacing = opts.spacing or 1
     self.count   = opts.count or 23
 
-    self.quads   = buildQuads(self.image, self.frameW, self.frameH, self.border, self.spacing, self.count)
+    -- Trim pixels from the top of every frame (useful if sprites are vertically offset)
+    self.trimTop = opts.trimTop or 0
+
+    self.quads   = buildQuads(
+        self.image,
+        self.frameW, self.frameH,
+        self.border, self.spacing,
+        self.count,
+        self.trimTop
+    )
 
     self.time    = 0
     self.index   = 1
     self.playing = true
     self.flipX   = false
 
-    -- current "clip"
     self.clip    = { frames = { 1 }, fps = 1, loop = true }
-
-    -- named clips (filled by user)
     self.clips   = {}
 
     return self
@@ -101,22 +113,29 @@ function Animation:update(dt)
 end
 
 function Animation:draw(x, y, r, sx, sy, ox, oy)
-    r           = r or 0
-    sx          = sx or 1
-    sy          = sy or 1
-    ox          = ox or 0
-    oy          = oy or 0
+    r                = r or 0
+    sx               = sx or 1
+    sy               = sy or 1
+    ox               = ox or 0
+    oy               = oy or 0
 
-    local frame = self.clip.frames[self.index]
-    local quad  = self.quads[frame]
+    -- Snap to pixels to prevent jitter
+    x                = math.floor(x + 0.5)
+    y                = math.floor(y + 0.5)
+
+    -- Pick current frame from current clip + index
+    local frameIndex = self.clip.frames[self.index] or 1
+    local quad       = self.quads[frameIndex]
     if not quad then return end
 
+    -- Correct flip pivot: compensate origin when using negative scale
     if self.flipX then
-        -- Flip around the origin point (ox), so the sprite stays anchored
-        love.graphics.draw(self.image, quad, x, y, r, -sx, sy, ox, oy)
-    else
-        love.graphics.draw(self.image, quad, x, y, r, sx, sy, ox, oy)
+        local _, _, qw = quad:getViewport()
+        sx = -sx
+        ox = qw - ox
     end
+
+    love.graphics.draw(self.image, quad, x, y, r, sx, sy, ox, oy)
 end
 
 return Animation
