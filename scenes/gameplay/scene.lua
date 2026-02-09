@@ -49,10 +49,9 @@ function scene.load()
         camera.setBounds(0, 0, 999999, 999999)
     end
 
-
     if scene.player then
         camera.setTarget(scene.player)
-        snapCameraToEntity(scene.player) -- <- KEY: see the level immediately
+        snapCameraToEntity(scene.player) -- <- See the level immediately
     end
 end
 

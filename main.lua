@@ -1,8 +1,9 @@
 local scene = require("scenes.gameplay.scene")
 
 function love.load()
-    scene.load()
+    -- Sharp graphics (no pixel smoothing)
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
+    scene.load()
     love.graphics.setLineStyle("rough")
     local font = love.graphics.newFont("assets/fonts/public-pixel-font/PublicPixel-rv0pA.ttf")
     love.graphics.setFont(font)

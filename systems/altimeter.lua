@@ -37,21 +37,31 @@ end
 
 function altimeter.draw(pad)
     if not altimeter.enabled then return end
-    pad = pad or 12
+    pad          = pad or 12
 
-    local cur = math.floor(altimeter._meters + 0.5)
-    local best = math.floor(altimeter._bestMeters + 0.5)
+    local cur    = math.floor(altimeter._meters + 0.5)
+    local best   = math.floor(altimeter._bestMeters + 0.5)
 
-    local line1 = ("Height: %dm"):format(cur)
-    local line2 = ("Best:   %dm"):format(best)
+    local line1  = ("Height: %dm"):format(cur)
+    local line2  = ("Best:   %dm"):format(best)
 
     -- Measure text to right-align
-    local w1 = love.graphics.getFont():getWidth(line1)
-    local w2 = love.graphics.getFont():getWidth(line2)
-    local boxW = math.max(w1, w2) + 18
-    local boxH = 44
+    local font   = love.graphics.getFont()
+    local w1     = font:getWidth(line1)
+    local w2     = font:getWidth(line2)
+    local boxW   = math.max(w1, w2) + 18
+    local boxH   = 44
 
-    local x = love.graphics.getWidth() - pad - boxW
+    -- Use current render target size (Canvas if window.beginDraw() set one)
+    local target = love.graphics.getCanvas()
+    local gw, gh
+    if target then
+        gw, gh = target:getWidth(), target:getHeight()
+    else
+        gw, gh = love.graphics.getWidth(), love.graphics.getHeight()
+    end
+
+    local x = gw - pad - boxW
     local y = pad
 
     love.graphics.push("all")
@@ -61,7 +71,6 @@ function altimeter.draw(pad)
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.print(line1, x + 9, y + 6)
     love.graphics.print(line2, x + 9, y + 24)
-
     love.graphics.pop()
 end
 
