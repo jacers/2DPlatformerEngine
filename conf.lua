@@ -2,7 +2,7 @@ require("core.constants")
 local S = SCREEN
 
 function love.conf(t)
-    t.window.title      = "Hacklahoma Platformer!"
+    t.window.title      = "2D Platformer!"
     t.window.icon       = "assets/images/icon.jpg"
     t.window.width      = S.WIDTH
     t.window.height     = S.HEIGHT

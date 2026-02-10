@@ -1,22 +1,10 @@
-# Hacklahoma Hike
-
-Hacklahoma-themed 2D platformer in a custom game engine!
+# 2D Platformer Game Engine!
 
 ![Scissortail posing for the camera](assets/images/docs/cute_and_charming_bird.png)
 
-Wether you play with a controller or a keyboard, can you make it to 99m? Good luck in this Hacklahoma-themed challenge!
+Based in Love2D
 
-> Pssssst... if you ever need a little boost of encouragement, press up for some support from your favorite feathered friend! 🕊️❤️
-
-## Downloads
-
-[MacOS](https://drive.google.com/file/d/1irHWK9AA5oSYaVcFs7iR-GJPrhi36bVo/view?usp=sharing)
-
-[Windows](https://drive.google.com/file/d/1HgDTzN9IuK-sb6i9eRIZU-Lx1yrzDRik/view?usp=sharing)
-
-[Linux](https://drive.google.com/file/d/19zWjYoQPYJC1-HYvxhdqLdaBoMPRriGf/view?usp=sharing)
-
-## Controls
+## Base Controls
 
 ### Movement
 
@@ -51,4 +39,4 @@ Wether you play with a controller or a keyboard, can you make it to 99m? Good lu
 
 ## Additional Credits
 
-Special thanks to the [Sheepolution Love2D tutorial](https://sheepolution.com/learn/book/0) for providing a framework and the [sheep image](assets/images/sheep.png).
+Special thanks to the [Sheepolution Love2D tutorial](https://sheepolution.com/learn/book/0) for providing an initial tutorial and the [sheep image](assets/images/sheep.png).
