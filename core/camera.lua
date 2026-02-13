@@ -162,7 +162,7 @@ function camera.update(dt)
     local px = (camera.target.x + (camera.target.width or 0) / 2)
     local py = (camera.target.y + (camera.target.height or 0) / 2)
 
-    -- ✅ IMPORTANT: compute "follow camera" (no-look) from a no-look current position
+    -- Compute "follow camera" (no-look) from a no-look current position
     local followX = camera.x - (camera.look.enabled and camera.look.x or 0)
     local followY = camera.y - (camera.look.enabled and camera.look.y or 0)
 
@@ -172,16 +172,16 @@ function camera.update(dt)
 
     -- Vertical deadzone uses followY (NOT camera.y, which includes look)
     if camera.vertical.enabled then
-        local deadFrac    = camera.vertical.deadzoneFrac or 0.30
-        local biasFrac    = camera.vertical.biasFrac or 0.0
-        local maxStep     = camera.vertical.maxStep or 200
-        local ySmooth     = camera.vertical.smoothing or camera.smoothing
+        local deadFrac       = camera.vertical.deadzoneFrac or 0.30
+        local biasFrac       = camera.vertical.biasFrac or 0.0
+        local maxStep        = camera.vertical.maxStep or 200
+        local ySmooth        = camera.vertical.smoothing or camera.smoothing
 
-        local deadH      = vh * deadFrac
-        local bandTop    = (vh - deadH) / 2 + (vh * biasFrac)
-        local bandBottom = bandTop + deadH
+        local deadH          = vh * deadFrac
+        local bandTop        = (vh - deadH) / 2 + (vh * biasFrac)
+        local bandBottom     = bandTop + deadH
 
-        local relY = py - followY
+        local relY           = py - followY
 
         local desiredFollowY = followY
         if relY < bandTop then
@@ -227,7 +227,7 @@ function camera.update(dt)
         baseY = clamp(baseY, minY, maxY)
     end
 
-    -- ✅ Now apply look as a small bounded offset (after deadzone/air/bounds)
+    -- Apply look as a small bounded offset (after deadzone/air/bounds)
     local desiredX = baseX + (camera.look.enabled and camera.look.x or 0)
     local desiredY = baseY + (camera.look.enabled and camera.look.y or 0)
 
