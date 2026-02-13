@@ -19,24 +19,28 @@ local function buildQuads(img, frameW, frameH, border, spacing, count, trimTop)
     return quads
 end
 
-function Animation.new(imagePath, opts)
+function Animation.new(imageOrPath, opts)
     opts = opts or {}
-
     local self = setmetatable({}, Animation)
 
-    self.image = love.graphics.newImage(imagePath)
+    if type(imageOrPath) == "string" then
+        self.image = love.graphics.newImage(imageOrPath)
+    else
+        self.image = imageOrPath
+    end
+
     self.image:setFilter("nearest", "nearest")
 
-    self.frameW  = opts.frameW or 24
-    self.frameH  = opts.frameH or 24
-    self.border  = opts.border or 1
-    self.spacing = opts.spacing or 1
-    self.count   = opts.count or 23
+    self.frameW          = opts.frameW or 24
+    self.frameH          = opts.frameH or 24
+    self.border          = opts.border or 1
+    self.spacing         = opts.spacing or 1
+    self.count           = opts.count or 23
 
     -- Trim pixels from the top of every frame (useful if sprites are vertically offset)
-    self.trimTop = opts.trimTop or 0
+    self.trimTop         = opts.trimTop or 0
 
-    self.quads   = buildQuads(
+    self.quads           = buildQuads(
         self.image,
         self.frameW, self.frameH,
         self.border, self.spacing,
@@ -44,15 +48,30 @@ function Animation.new(imagePath, opts)
         self.trimTop
     )
 
-    self.time    = 0
-    self.index   = 1
-    self.playing = true
-    self.flipX   = false
+    self.time            = 0
+    self.index           = 1
+    self.playing         = true
+    self.flipX           = false
 
-    self.clip    = { frames = { 1 }, fps = 1, loop = true }
-    self.clips   = {}
+    self.clip            = { frames = { 1 }, fps = 1, loop = true }
+    self.clips           = {}
 
+    self.currentClipName = nil
     return self
+end
+
+function Animation:setImage(img)
+    self.image = img
+    self.image:setFilter("nearest", "nearest")
+
+    -- rebuild quads with same frame params (image size can change, but for palette swap it won't)
+    self.quads = buildQuads(
+        self.image,
+        self.frameW, self.frameH,
+        self.border, self.spacing,
+        self.count,
+        self.trimTop
+    )
 end
 
 function Animation:addClip(name, frames, fps, loop)
@@ -72,6 +91,7 @@ function Animation:play(name, force)
     end
 
     self.clip = nextClip
+    self.currentClipName = name
     self.time = 0
     self.index = 1
     self.playing = true

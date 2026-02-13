@@ -49,54 +49,55 @@ function Player:new(x, y)
     self.facing        = 1 -- 1 = right, -1 = left
 
     -- Skin (build animation ONCE)
-    local skin   = PlayerSkins.current()
-    self.skinId  = skin.id
-    self.skinPath = skin.path
+    local skin         = PlayerSkins.current()
+    self.skinId        = skin.id
 
-    self.anim = self:_buildAnim(self.skinPath)
+    local img          = PlayerSkins.currentImage()
+    self.anim          = self:_buildAnim(img)
+
     self.anim:play("stand", true)
 end
 
 -- Build an Animation from a spritesheet path
-function Player:_buildAnim(imagePath)
-    local anim = Animation.new(imagePath, {
-        frameW   = 23,
-        frameH   = 23,
-        border   = 1,
-        spacing  = 1,
-        count    = 12,
-        trimTop  = 6,
+function Player:_buildAnim(imageOrPath)
+    local anim = Animation.new(imageOrPath, {
+        frameW  = 23,
+        frameH  = 23,
+        border  = 1,
+        spacing = 1,
+        count   = 12,
+        trimTop = 6,
     })
 
-    anim:addClip("stand",     { 1 },       1,  false)
-    anim:addClip("crouch",    { 2 },       1,  false)
-    anim:addClip("walk",      { 3, 4, 5 }, 10, true)
-    anim:addClip("run",       { 6, 7, 8 }, 14, true)
-    anim:addClip("turn",      { 9 },       1,  false)
-    anim:addClip("jump_up",   { 10 },      1,  false)
-    anim:addClip("jump_down", { 11 },      1,  false)
-    anim:addClip("look_up",   { 12 },      1,  false)
+    anim:addClip("stand", { 1 }, 1, false)
+    anim:addClip("crouch", { 2 }, 1, false)
+    anim:addClip("walk", { 3, 4, 5 }, 10, true)
+    anim:addClip("run", { 6, 7, 8 }, 14, true)
+    anim:addClip("turn", { 9 }, 1, false)
+    anim:addClip("jump_up", { 10 }, 1, false)
+    anim:addClip("jump_down", { 11 }, 1, false)
+    anim:addClip("look_up", { 12 }, 1, false)
 
     return anim
 end
 
 function Player:setSkinByIndex(i)
     local prevFlip = self.anim and self.anim.flipX or false
-    local prevClip = self.anim and self.anim.currentClip or "stand"
+    local prevClip = self.anim and self.anim.currentClipName or "stand"
 
     local skin = PlayerSkins.setIndex(i)
     self.skinId = skin.id
-    self.skinPath = skin.path
 
-    self.anim = self:_buildAnim(self.skinPath)
-    self.anim.flipX = prevFlip
+    local img = PlayerSkins.currentImage()
 
-    -- Default to standing if previous animation clip could not be found
-    if prevClip and self.anim.play then
-        self.anim:play(prevClip, true)
+    if not self.anim then
+        self.anim = self:_buildAnim(img)
     else
-        self.anim:play("stand", true)
+        self.anim:setImage(img)
     end
+
+    self.anim.flipX = prevFlip
+    self.anim:play(prevClip, true)
 end
 
 function Player:cycleSkin(dir)
