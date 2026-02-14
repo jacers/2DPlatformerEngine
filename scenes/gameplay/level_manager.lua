@@ -5,7 +5,7 @@ require("core.constants")
 local level_manager = {}
 
 level_manager.levels = {
-    { kind = "tiled", path = "levels/level01/initial_test.json" },
+    { kind = "tiled", path = "levels/level01/level01.json" },
 }
 
 level_manager.index = 1
