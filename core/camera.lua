@@ -51,11 +51,25 @@ camera.look            = {
     deadzone        = CAMERA.LOOK.DEADZONE,
 
     smoothing       = CAMERA.LOOK.SMOOTHING,
-    returnSmoothing = (CAMERA.LOOK.RETURN_SMOOTHING or (CAMERA.LOOK.SMOOTHING * 2.5)),
-    snapEpsilon     = (CAMERA.LOOK.SNAP_EPSILON or 0.75),
+    returnSmoothing = (CAMERA.LOOK.RETURN_SMOOTHING or 95),
+    snapEpsilon     = (CAMERA.LOOK.SNAP_EPSILON or 2.0),
 
     x               = 0,
-    y               = 0
+    y               = 0,
+}
+
+-- Tile framing rules (nullified when hitting edge of map)
+camera.tileRules       = {
+    -- Horizontal lead
+    tilesWide          = 24,
+    tilesAhead         = 11, -- In front when moving right
+    tilesBehind        = 11, -- Behind when moving left
+    vxThreshold        = 25, -- How fast before we committing to "moving left/right" framing
+
+    -- Vertical margins
+    tilesAbove         = 3,  -- Keep >= 3 tiles above when player gets too high
+    tilesBelowFalling  = 5,  -- Keep >= 5 tiles below when falling and player gets too low
+    vyFallingThreshold = 40, -- Consider "falling" if vy > this
 }
 
 -- Setup
@@ -97,6 +111,11 @@ local function axisWithDeadzone(v, dz)
     return v
 end
 
+local function expSmooth(current, target, smoothing, dt)
+    local t = 1 - math.exp(-smoothing * dt)
+    return current + (target - current) * t
+end
+
 -- Update
 
 function camera.update(dt)
@@ -104,7 +123,7 @@ function camera.update(dt)
         return
     end
 
-    -- Read controller
+    -- Read controller (right stick + R3 zoom)
     local rx, ry = 0, 0
     local r3Held = false
 
@@ -124,31 +143,26 @@ function camera.update(dt)
         camera.zoom.target = camera.baseScale
     end
 
-    -- Smooth zoom
-    local zt = 1 - math.exp(-camera.zoom.smoothing * dt)
-    camera.scale = camera.scale + (camera.zoom.target - camera.scale) * zt
+    camera.scale = expSmooth(camera.scale, camera.zoom.target, camera.zoom.smoothing, dt)
 
     -- Effective viewport (WORLD units)
     local vw = camera.viewW / camera.scale
     local vh = camera.viewH / camera.scale
 
-    -- Look offset (bounded + snap back)
+    -- Right stick look (bounded + snaps back)
     if camera.look.enabled then
         local desiredLookX = rx * camera.look.maxX
         local desiredLookY = ry * camera.look.maxY
 
         local stickActive = (rx ~= 0) or (ry ~= 0)
         local s = stickActive and camera.look.smoothing or camera.look.returnSmoothing
-        local lt = 1 - math.exp(-s * dt)
 
-        camera.look.x = camera.look.x + (desiredLookX - camera.look.x) * lt
-        camera.look.y = camera.look.y + (desiredLookY - camera.look.y) * lt
+        camera.look.x = expSmooth(camera.look.x, desiredLookX, s, dt)
+        camera.look.y = expSmooth(camera.look.y, desiredLookY, s, dt)
 
-        -- Hard clamp ALWAYS
         camera.look.x = clamp(camera.look.x, -camera.look.maxX, camera.look.maxX)
         camera.look.y = clamp(camera.look.y, -camera.look.maxY, camera.look.maxY)
 
-        -- Snap to 0 when released and close enough
         if not stickActive then
             if math.abs(camera.look.x) < camera.look.snapEpsilon then camera.look.x = 0 end
             if math.abs(camera.look.y) < camera.look.snapEpsilon then camera.look.y = 0 end
@@ -158,93 +172,95 @@ function camera.update(dt)
         camera.look.y = 0
     end
 
-    -- Target center
-    local px = (camera.target.x + (camera.target.width or 0) / 2)
-    local py = (camera.target.y + (camera.target.height or 0) / 2)
+    -- Player reference point (use center)
+    local px             = camera.target.x + (camera.target.width or 0) / 2
+    local py             = camera.target.y + (camera.target.height or 0) / 2
 
-    -- Compute "follow camera" (no-look) from a no-look current position
-    local followX = camera.x - (camera.look.enabled and camera.look.x or 0)
-    local followY = camera.y - (camera.look.enabled and camera.look.y or 0)
+    local vx             = camera.target.vx or 0
+    local vy             = camera.target.vy or 0
 
-    -- Base camera X (center target)
-    local baseX = px - vw / 2
-    local baseY = py - vh / 2
+    -- Safe-zone camera (does not recenter when stadning still)
+    -- Camera stays put until player violates tile margins.
 
-    -- Vertical deadzone uses followY (NOT camera.y, which includes look)
-    if camera.vertical.enabled then
-        local deadFrac       = camera.vertical.deadzoneFrac or 0.30
-        local biasFrac       = camera.vertical.biasFrac or 0.0
-        local maxStep        = camera.vertical.maxStep or 200
-        local ySmooth        = camera.vertical.smoothing or camera.smoothing
+    local rules          = camera.tileRules
 
-        local deadH          = vh * deadFrac
-        local bandTop        = (vh - deadH) / 2 + (vh * biasFrac)
-        local bandBottom     = bandTop + deadH
+    -- Compute "no-look" camera position (remove current look offset)
+    local followX        = camera.x - (camera.look.enabled and camera.look.x or 0)
+    local followY        = camera.y - (camera.look.enabled and camera.look.y or 0)
 
-        local relY           = py - followY
+    -- Convert tile margins to world units
+    local leftMargin     = (rules.tilesBehind or 0) * TILE_LENGTH
+    local rightMargin    = (rules.tilesAhead or 0) * TILE_LENGTH
 
-        local desiredFollowY = followY
-        if relY < bandTop then
-            desiredFollowY = py - bandTop
-        elseif relY > bandBottom then
-            desiredFollowY = py - bandBottom
-        end
+    local topMargin      = (rules.tilesAbove or 0) * TILE_LENGTH
 
-        local dy = desiredFollowY - followY
-        local maxMove = maxStep * dt
-        if dy > maxMove then dy = maxMove end
-        if dy < -maxMove then dy = -maxMove end
+    -- While falling, require more space below; otherwise keep it calmer
+    local bottomTiles    =
+        (vy > (rules.vyFallingThreshold or 40))
+        and (rules.tilesBelowFalling or rules.tilesAbove or 0)
+        or (rules.tilesBelow or rules.tilesAbove or 0)
 
-        local yt = 1 - math.exp(-ySmooth * dt)
-        followY = followY + dy * yt
+    local bottomMargin   = bottomTiles * TILE_LENGTH
 
-        baseY = followY
-    else
-        baseY = py - vh / 2
+    -- Start with "stay where you are"
+    local desiredFollowX = followX
+    local desiredFollowY = followY
+
+    -- Horizontal safe-zone
+    -- Player must stay between:
+    --   leftBound  = camLeft + leftMargin
+    --   rightBound = camLeft + vw - rightMargin
+    local leftBound      = desiredFollowX + leftMargin
+    local rightBound     = desiredFollowX + vw - rightMargin
+
+    if px < leftBound then
+        desiredFollowX = px - leftMargin
+    elseif px > rightBound then
+        desiredFollowX = px - (vw - rightMargin)
     end
 
-    -- Airborne vertical dampening operates on baseY (still no-look)
-    if camera.air.enabled then
-        local onGround = camera.target.onGround == true
-        if onGround then
-            camera.lastGroundBaseY = baseY
-        else
-            if camera.lastGroundBaseY == nil then
-                camera.lastGroundBaseY = baseY
-            end
-            local f = camera.air.followY or 0.25
-            baseY = camera.lastGroundBaseY + (baseY - camera.lastGroundBaseY) * f
-        end
+    -- Vertical safe-zone
+    -- Player must stay between:
+    --   topBound    = camTop + topMargin
+    --   bottomBound = camTop + vh - bottomMargin
+    local topBound    = desiredFollowY + topMargin
+    local bottomBound = desiredFollowY + vh - bottomMargin
+
+    if py < topBound then
+        desiredFollowY = py - topMargin
+    elseif py > bottomBound then
+        desiredFollowY = py - (vh - bottomMargin)
     end
 
-    -- Clamp base to bounds (no-look)
+    -- Clamp desired follow to bounds (no-look)
     if camera.bounds then
         local minX = camera.bounds.x
         local minY = camera.bounds.y
         local maxX = camera.bounds.x + camera.bounds.w - vw
         local maxY = camera.bounds.y + camera.bounds.h - vh
-        baseX = clamp(baseX, minX, maxX)
-        baseY = clamp(baseY, minY, maxY)
+
+        desiredFollowX = clamp(desiredFollowX, minX, maxX)
+        desiredFollowY = clamp(desiredFollowY, minY, maxY)
     end
 
-    -- Apply look as a small bounded offset (after deadzone/air/bounds)
-    local desiredX = baseX + (camera.look.enabled and camera.look.x or 0)
-    local desiredY = baseY + (camera.look.enabled and camera.look.y or 0)
+    -- Add look offset after safe-zone (so stick only nudges locally)
+    local desiredX = desiredFollowX + (camera.look.enabled and camera.look.x or 0)
+    local desiredY = desiredFollowY + (camera.look.enabled and camera.look.y or 0)
 
-    -- Clamp final desired too
+    -- Clamp final to bounds too (so look can't push out)
     if camera.bounds then
         local minX = camera.bounds.x
         local minY = camera.bounds.y
         local maxX = camera.bounds.x + camera.bounds.w - vw
         local maxY = camera.bounds.y + camera.bounds.h - vh
+
         desiredX = clamp(desiredX, minX, maxX)
         desiredY = clamp(desiredY, minY, maxY)
     end
 
     -- Smooth follow
-    local t = 1 - math.exp(-camera.smoothing * dt)
-    camera.x = camera.x + (desiredX - camera.x) * t
-    camera.y = camera.y + (desiredY - camera.y) * t
+    camera.x = expSmooth(camera.x, desiredX, camera.smoothing, dt)
+    camera.y = expSmooth(camera.y, desiredY, camera.smoothing, dt)
 end
 
 -- Draw control
@@ -267,12 +283,13 @@ end
 function camera.reset(x, y)
     camera.x = x or 0
     camera.y = y or 0
+
     camera.baseScale = CAMERA.DEFAULT_ZOOM
     camera.scale = CAMERA.DEFAULT_ZOOM
     camera.zoom.target = CAMERA.DEFAULT_ZOOM
+
     camera.look.x = 0
     camera.look.y = 0
-    camera.lastGroundBaseY = nil
 end
 
 -- Utilities
