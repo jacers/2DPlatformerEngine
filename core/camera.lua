@@ -61,7 +61,6 @@ camera.look            = {
 -- Tile framing rules (nullified when hitting edge of map)
 camera.tileRules       = {
     -- Horizontal lead
-    tilesWide          = 24,
     tilesAhead         = 11, -- In front when moving right
     tilesBehind        = 11, -- Behind when moving left
     vxThreshold        = 25, -- How fast before we committing to "moving left/right" framing
