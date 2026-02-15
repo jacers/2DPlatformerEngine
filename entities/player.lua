@@ -13,18 +13,12 @@ local Player        = BaseEntity:extend()
 function Player:new(x, y)
     BaseEntity.new(self, "Player", x, y)
 
-    -- Size
-    self.width         = P.WIDTH
-    self.height        = P.HEIGHT
+    -- Size + hitbox
+    self:setSize(P.WIDTH, P.HEIGHT)
+    self:setHitboxSize(P.WIDTH, P.HEIGHT)
 
-    -- Default hitbox size
-    self.baseHitW      = P.WIDTH
-    self.baseHitH      = P.HEIGHT
-
-    -- Physics state
-    self.vx            = 0
-    self.vy            = 0
-    self.onGround      = false
+    -- Physics state + gravity
+    self:initPlatformer({ gravity = BASE_GRAVITY })
 
     -- Movement
     self.walkSpeed     = P.WALK_SPEED
@@ -53,7 +47,8 @@ function Player:new(x, y)
     self.skinId        = skin.id
 
     local img          = PlayerSkins.currentImage()
-    self.anim          = self:_buildAnim(img)
+    local anim         = self:_buildAnim(img)
+    self:setAnim(anim)
 
     self.anim:play("stand", true)
 end
@@ -85,13 +80,13 @@ function Player:setSkinByIndex(i)
     local prevFlip = self.anim and self.anim.flipX or false
     local prevClip = self.anim and self.anim.currentClipName or "stand"
 
-    local skin = PlayerSkins.setIndex(i)
-    self.skinId = skin.id
+    local skin     = PlayerSkins.setIndex(i)
+    self.skinId    = skin.id
 
-    local img = PlayerSkins.currentImage()
+    local img      = PlayerSkins.currentImage()
 
     if not self.anim then
-        self.anim = self:_buildAnim(img)
+        self:setAnim(self:_buildAnim(img))
     else
         self.anim:setImage(img)
     end
@@ -104,26 +99,6 @@ function Player:cycleSkin(dir)
     local skin = PlayerSkins.cycle(dir or 1)
     self:setSkinByIndex(PlayerSkins.index)
     return skin
-end
-
--- Returns the collision hitbox AABB:
---  - if PLAYER.TIGHT_SPRITE_HITBOX is true:
---      left/right/top inset by HITBOX_INSET, bottom unchanged
---  - else: uses PLAYER.WIDTH/HEIGHT centered at sprite bottom
-function Player:getHitbox()
-    if P.TIGHT_SPRITE_HITBOX then
-        local inset = P.HITBOX_INSET or 1
-        local hx = self.x + inset
-        local hy = self.y + inset
-        local hw = self.width - inset * 2
-        local hh = self.height - inset
-        return hx, hy, hw, hh
-    end
-
-    -- Mario-esc hitbox anchored to sprite bottom-center
-    local hx = self.x + (self.width - self.baseHitW) / 2
-    local hy = self.y + (self.height - self.baseHitH)
-    return hx, hy, self.baseHitW, self.baseHitH
 end
 
 local function approach(v, target, amount)
@@ -287,44 +262,13 @@ function Player:update(dt)
         end
     end
 
-    -- Advance animation timer
-    self.anim:update(dt)
+    -- Flip + advance animation timer
+    self:updateAnim(dt)
 end
 
 -- Call this from love.keypressed (or when jump is pressed once)
 function Player:queueJump()
     self.jumpBuffer = self.jumpBufferMax
-end
-
-function Player:draw()
-    local ox = self.anim.frameW / 2
-    local oy = self.anim.frameH - 1 -- bottom of sprite frame
-
-    -- Draw at bottom-center of hitbox
-    self.anim:draw(
-        self.x + self.width / 2,
-        self.y + self.height,
-        0, 1, 1,
-        ox, oy
-    )
-
-    -- Debug hitbox overlay (red, drawn last/on top)
-    if DEBUG and DEBUG.DRAW_ENTITY_HITBOX then
-        local hx, hy, hw, hh = self:getHitbox()
-
-        -- Filled
-        local a = (DEBUG.HITBOX_FILL_ALPHA or 0.0)
-        if a > 0 then
-            love.graphics.setColor(1, 0, 0, a)
-            love.graphics.rectangle("fill", hx, hy, hw, hh)
-        end
-
-        -- Outline
-        love.graphics.setColor(1, 0, 0, 1)
-        love.graphics.rectangle("line", hx, hy, hw, hh)
-
-        love.graphics.setColor(1, 1, 1, 1)
-    end
 end
 
 return Player
