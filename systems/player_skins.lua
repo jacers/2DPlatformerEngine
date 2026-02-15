@@ -34,6 +34,15 @@ skins.list = {
             [C3] = { 215, 123, 186 }, -- Hearts from looking up
         }
     },
+    {
+        id = "orangetail",
+        base = BASE,
+        palette = {
+            [C1] = { 255, 147, 0 }, -- Main feathers
+            [C2] = { 92, 51, 5 },   -- Deeper color
+            [C3] = { 215, 123, 186 }, -- Hearts from looking up
+        }
+    },
 }
 
 skins.index = 1
