@@ -9,6 +9,8 @@ SCREEN       = {
 MAX_FRAME_DT = 0.1
 PHYSICS_STEP = 1 / 120
 
+BASE_GRAVITY = 3100
+
 PLAYER       = {
     WIDTH               = 16,
     HEIGHT              = 16,
@@ -17,7 +19,6 @@ PLAYER       = {
     ACCEL_GROUND        = 3000,
     ACCEL_AIR           = 1000,
     FRICTION            = 1500,
-    GRAVITY             = 3100,
     JUMP_VEL            = 800,
     FALL_MULT           = 1.35,
     LOW_JUMP_MULT       = 1.8,
@@ -61,8 +62,8 @@ CAMERA       = {
 }
 
 DEBUG        = {
-    -- Draw player's hitbox in red on top for clarity
-    DRAW_PLAYER_HITBOX = false,
+    -- Draw entity's hitbox in red on top for clarity
+    DRAW_ENTITY_HITBOX = true,
     HITBOX_FILL_ALPHA  = 0.15, -- How easy it is to see
 }
 

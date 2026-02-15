@@ -34,7 +34,7 @@ function Player:new(x, y)
     self.friction      = P.FRICTION
 
     -- Gravity / Jump
-    self.gravity       = P.GRAVITY
+    self.gravity       = BASE_GRAVITY
     self.jumpVel       = P.JUMP_VEL
     self.fallMult      = P.FALL_MULT
     self.lowJumpMult   = P.LOW_JUMP_MULT
@@ -309,8 +309,7 @@ function Player:draw()
     )
 
     -- Debug hitbox overlay (red, drawn last/on top)
-    -- Debug hitbox overlay (red, drawn last/on top)
-    if DEBUG and DEBUG.DRAW_PLAYER_HITBOX then
+    if DEBUG and DEBUG.DRAW_ENTITY_HITBOX then
         local hx, hy, hw, hh = self:getHitbox()
 
         -- Filled

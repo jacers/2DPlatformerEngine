@@ -52,8 +52,7 @@ local function spawnSolidsFromTileLayer(entityHandler, map, layer)
     for i = 1, #layer.data do
         local gid = layer.data[i]
         if gid and gid ~= 0 then
-            -- Your test tileset has firstgid=1 and only 1 tile.
-            -- So gid==1 means solid.
+            -- gid==1 means solid
             local idx = i - 1
             local tx = idx % w
             local ty = math.floor(idx / w)

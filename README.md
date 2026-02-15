@@ -39,4 +39,4 @@ Based in Love2D
 
 ## Additional Credits
 
-Special thanks to the [Sheepolution Love2D tutorial](https://sheepolution.com/learn/book/0) for providing an initial tutorial and the [sheep image](assets/images/sheep.png).
+Special thanks to the [Sheepolution Love2D tutorial](https://sheepolution.com/learn/book/0) for providing an initial tutorial.

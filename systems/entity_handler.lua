@@ -54,11 +54,6 @@ function entityHandler.draw()
     for _, entity in ipairs(entities) do
         entity:draw()
     end
-
-    love.graphics.setColor(1, 0, 0, 1)
-    love.graphics.rectangle("fill", 0, 0, 16, 16)
-    love.graphics.setColor(1, 1, 1, 1)
-
 end
 
 -- Picking (editor)
