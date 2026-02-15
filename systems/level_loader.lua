@@ -126,7 +126,6 @@ function level_loader.loadTiledJson(entityHandler, path)
         -- Tiled point objects: x/y are fine as a world position
         -- If you want spawn to mean "feet on ground", keep y as-is and let gravity settle.
         local px, py = ctx.player_spawn.x, ctx.player_spawn.y
-
         local player = Player(px, py)
         entityHandler.spawn(player)
         ctx.player = player
