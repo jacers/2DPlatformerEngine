@@ -1,8 +1,13 @@
 require("core.constants")
 
 local Object = require("libraries.classic")
+local keyboard = require("core.input.keyboard")
+local gamepad = require("core.input.gamepad")
 
 local BaseEntity = Object:extend()
+
+-- Debug (shared across all entities)
+BaseEntity.debugHitboxes = false
 
 function BaseEntity:new(name, x, y)
     self.name     = name or "default"
@@ -78,6 +83,8 @@ function BaseEntity:getHitbox()
 end
 
 function BaseEntity:update(dt)
+    local activate_debug = keyboard.pressed("debug") or gamepad.down("debug")
+    if activate_debug then self.debug = not self.debug end
     -- Child classes can override
 end
 
@@ -121,7 +128,7 @@ function BaseEntity:drawSpriteBottomCenter()
 end
 
 function BaseEntity:drawDebugHitbox()
-    if not (DEBUG and DEBUG.DRAW_ENTITY_HITBOX) then return end
+    if not BaseEntity.debugHitboxes then return end
 
     local hx, hy, hw, hh = self:getHitbox()
 
@@ -133,7 +140,6 @@ function BaseEntity:drawDebugHitbox()
 
     love.graphics.setColor(1, 0, 0, 1)
     love.graphics.rectangle("line", hx, hy, hw, hh)
-
     love.graphics.setColor(1, 1, 1, 1)
 end
 

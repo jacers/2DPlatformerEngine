@@ -1,6 +1,7 @@
 require("core.constants")
 
 local entityHandler = require("systems.entity_handler")
+local BaseEntity    = require("entities.entity")
 local tick          = require("libraries.tick")
 
 local keyboard      = require("core.input.keyboard")
@@ -108,6 +109,11 @@ function scene.keypressed(key)
         scene.player:cycleSkin(1)
         return
     end
+
+    if keyboard.actionPressed(key, "debug") then
+        BaseEntity.debugHitboxes = not BaseEntity.debugHitboxes
+        return
+    end
 end
 
 function scene.gamepadpressed(joystick, button)
@@ -130,6 +136,11 @@ function scene.gamepadpressed(joystick, button)
 
     if scene.player and keyboard.actionPressedAny(nil, "cycle_right") then
         scene.player:cycleSkin(1)
+        return
+    end
+
+    if keyboard.actionPressedAny(nil, "debug") then
+        BaseEntity.debugHitboxes = not BaseEntity.debugHitboxes
         return
     end
 end

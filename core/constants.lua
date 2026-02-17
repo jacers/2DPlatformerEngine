@@ -63,7 +63,6 @@ CAMERA       = {
 
 DEBUG        = {
     -- Draw entity's hitbox in red on top for clarity
-    DRAW_ENTITY_HITBOX = false,
     HITBOX_FILL_ALPHA  = 0.15, -- How easy it is to see
 }
 

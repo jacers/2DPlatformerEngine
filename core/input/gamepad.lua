@@ -17,6 +17,8 @@ local input = {
     cycle_left  = { "leftshoulder" },
     cycle_right = { "rightshoulder" },
 
+    debug       = { "guide" },
+
     -- Analog stick movement (optional thresholds)
     stick       = {
         enabled   = true,

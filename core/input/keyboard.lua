@@ -19,6 +19,8 @@ local input = {
     -- Cycle character
     cycle_left  = { "-" },
     cycle_right = { "=" },
+
+    debug       = { "tab" },
 }
 
 -- Returns true while any key for the action is held
